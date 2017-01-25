@@ -10,7 +10,7 @@ marshalled into json and sent to ES in a field called ```context```
 
 # Installation
 ```bash
-go get github.com/thrawn01/logrusUDP
+go get github.com/mailgun/logrus-udplog
 ```
 
 # Usage
