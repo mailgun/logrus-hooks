@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"bytes"
+
 	"github.com/pkg/errors"
 )
 
@@ -65,7 +67,8 @@ func (udp *Server) GetRequest() map[string]interface{} {
 	var result map[string]interface{}
 	data := <-udp.resp
 	fmt.Printf("%s\n", string(data))
-	if err := json.Unmarshal(data, &result); err != nil {
+	parts := bytes.SplitN(data, []byte(":"), 2)
+	if err := json.Unmarshal(parts[1], &result); err != nil {
 		fmt.Printf("json.Unmarshal() error: %s\n", err)
 	}
 	return result
