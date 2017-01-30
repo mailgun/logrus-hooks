@@ -1,16 +1,14 @@
-package logrusUDP
+package udploghook
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"bytes"
-
-	"net/http"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
@@ -42,7 +40,7 @@ type LogRecord struct {
 	Timestamp Number                 `json:"timestamp"`
 }
 
-func NewLogHook(host string, port int) (*UDPHook, error) {
+func New(host string, port int) (*UDPHook, error) {
 	hook := UDPHook{}
 
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", host, port))

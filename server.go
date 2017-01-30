@@ -1,13 +1,12 @@
-package logrusUDP
+package udploghook
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
-
-	"bytes"
 
 	"github.com/pkg/errors"
 )

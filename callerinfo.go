@@ -1,4 +1,4 @@
-package logrusUDP
+package udploghook
 
 import (
 	"runtime"
@@ -20,7 +20,7 @@ func getCallerInfo() *CallerInfo {
 	for idx := 0; idx < (length - 1); idx++ {
 		f := runtime.FuncForPC(rpc[idx])
 		funcName := f.Name()
-		if strings.HasPrefix(funcName, "github.com/Sirupsen") {
+		if strings.HasPrefix(strings.ToLower(funcName), "github.com/sirupsen") {
 			continue
 		}
 		filePath, lineNo := f.FileLine(rpc[idx])

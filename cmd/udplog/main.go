@@ -2,13 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
-
-	"strings"
-
 	"io/ioutil"
-
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/logrus-udplog"
@@ -61,7 +58,7 @@ func main() {
 	port, err := strconv.ParseInt(parts[1], 10, 64)
 	checkErr("ParseInt Port Number", err)
 
-	hook, err := logrusUDP.NewLogHook(parts[0], int(port))
+	hook, err := udploghook.New(parts[0], int(port))
 	checkErr("NowLogHook Error", err)
 
 	if opts.Bool("verbose") {

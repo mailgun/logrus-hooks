@@ -1,14 +1,11 @@
-package logrusUDP_test
+package udploghook_test
 
 import (
-	"testing"
-
 	"bytes"
-	"net/http/httptest"
-
 	"net/http"
-
+	"net/http/httptest"
 	"net/url"
+	"testing"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/logrus-udplog"
@@ -18,7 +15,7 @@ import (
 func TestLogrusUDP(t *testing.T) { TestingT(t) }
 
 type LogrusUDPSuite struct {
-	server *logrusUDP.Server
+	server *udploghook.Server
 }
 
 var _ = Suite(&LogrusUDPSuite{})
@@ -29,7 +26,7 @@ func (s *LogrusUDPSuite) TestFieldsToMap(c *C) {
 		"bar":  1,
 		"bean": true,
 	}
-	result := logrusUDP.FieldsToMap(fields)
+	result := udploghook.FieldsToMap(fields)
 	c.Assert(result["foo"], Equals, "bar")
 	c.Assert(result["bar"], Equals, 1)
 	c.Assert(result["bean"], Equals, true)
@@ -43,7 +40,7 @@ func (s *LogrusUDPSuite) TestFieldsToMapNested(c *C) {
 		"bar":                1,
 		"bean":               true,
 	}
-	result := logrusUDP.FieldsToMap(fields)
+	result := udploghook.FieldsToMap(fields)
 	c.Assert(result["foo"], Equals, "bar")
 	c.Assert(result["bar"], Equals, 1)
 	c.Assert(result["bean"], Equals, true)
@@ -57,7 +54,7 @@ func (s *LogrusUDPSuite) TestRequestToMap(c *C) {
 	req.Header.Add("User-Agent", "test-agent")
 	req.ParseForm()
 
-	result := logrusUDP.RequestToMap(req)
+	result := udploghook.RequestToMap(req)
 
 	c.Assert(result["headers"], DeepEquals, http.Header{"User-Agent": []string{"test-agent"}})
 	c.Assert(result["method"], Equals, "POST")
