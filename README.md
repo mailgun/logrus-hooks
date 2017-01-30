@@ -10,7 +10,7 @@ import (
     "github.com/mailgun/logrus-udplog"
 )
 
-hook, err := logrusUDP.NewLogHook("localhost", 55647)
+hook, err := udploghook.New("localhost", 55647)
 if err != nil {
     panic(err)
 }
