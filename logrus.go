@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -29,7 +30,7 @@ type UDPHook struct {
 }
 
 type LogRecord struct {
-	Context   map[string]interface{} `json:"context"`
+	Context   map[string]interface{} `json:"context,omitempty"`
 	AppName   string                 `json:"appname"`
 	HostName  string                 `json:"hostname"`
 	LogLevel  string                 `json:"logLevel"`
@@ -135,21 +136,51 @@ func (hook *UDPHook) Fire(entry *logrus.Entry) error {
 	if err != nil {
 		return errors.Wrap(err, "UDPHook.Fire() - json.Marshall() error")
 	}
-	if hook.debug {
-		fmt.Printf("Send: %s\n", string(dump))
-	}
 
 	// Add a category to the beginning of the log entry followed by the json entry
 	buf := bytes.NewBuffer([]byte("logrus:"))
 	buf.Write(dump)
 
-	// Send the buffer to udplog
-	length, err := hook.conn.Write(buf.Bytes())
-	if err != nil {
-		return errors.Wrap(err, "UDPHook.Fire() - Write() error")
+	if hook.debug {
+		fmt.Printf("%s\n", buf.String())
 	}
-	if length != len(dump) {
-		return errors.Wrapf(err, "UDPHook.Fire() - Write() only wrote %d of %d bytes", length, len(dump))
+
+	// Send the buffer to udplog
+	err = hook.sendUDP(buf.Bytes())
+	if err != nil {
+		return errors.Wrap(err, "UDPHook.Fire()")
+	}
+	return nil
+}
+
+func (hook *UDPHook) sendUDP(buf []byte) error {
+	length, err := hook.conn.Write(buf)
+	if err != nil {
+		return errors.Wrap(err, "Write() error")
+	}
+	if length != len(buf) {
+		return errors.Wrapf(err, "Write() only wrote %d of %d bytes", length, len(buf))
+	}
+	return nil
+}
+
+// Given an io reader send the contents of the reader to udplog
+func (hook *UDPHook) SendIO(input io.Reader) error {
+	// Append our identifier
+	buf := bytes.NewBuffer([]byte("logrus:"))
+	_, err := buf.ReadFrom(input)
+	if err != nil {
+		return errors.Wrap(err, "UDPHook.SendIO()")
+	}
+
+	if hook.debug {
+		fmt.Printf("%s\n", buf.String())
+	}
+
+	// Send to UDPLog
+	err = hook.sendUDP(buf.Bytes())
+	if err != nil {
+		return errors.Wrap(err, "UDPHook.SendIO()")
 	}
 	return nil
 }

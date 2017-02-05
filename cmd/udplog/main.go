@@ -37,12 +37,16 @@ func main() {
 	   $ udplog "This is a message line"
 
 	   Send a log message with 'other' fields attached
-	   $ udplog "This is a message line" -o "http.request=http://foo/bar" -o "foo=bar"`)
+	   $ udplog "This is a message line" -o "http.request=http://foo/bar" -o "foo=bar"
+
+	   Send custom JSON to udplog
+	   $ echo -e '{"custom":"json"}' | udplog -v`)
 
 	parser := args.NewParser(args.EnvPrefix("UDPLOG_"), args.Desc(desc, args.IsFormated))
 	parser.AddOption("--verbose").Alias("-v").IsTrue().Help("be verbose")
-	parser.AddOption("--other").IsStringMap().Help("additional fields to be sent in the udplog payload")
-	parser.AddArgument("message").Required().Help("the message to log")
+	parser.AddArgument("message").Help("the message to log")
+	parser.AddOption("--other").Alias("-o").IsStringMap().
+		Help("additional fields to be sent in the udplog payload")
 	parser.AddOption("--address").Env("ADDRESS").Default("localhost:55647").
 		Help("address where udplog is listening")
 
@@ -63,6 +67,20 @@ func main() {
 
 	if opts.Bool("verbose") {
 		hook.SetDebug(true)
+	}
+
+	// if stdin has an open pipe send the raw input from stdin to udplog
+	if args.IsCharDevice(os.Stdin) {
+		err := hook.SendIO(os.Stdin)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Send via stdin failed - %s", err.Error())
+		}
+		os.Exit(0)
+	} else {
+		if !opts.IsSet("message") {
+			fmt.Fprintf(os.Stderr, "'message' is required if no pipe from stdin")
+			os.Exit(1)
+		}
 	}
 
 	logrus.SetOutput(ioutil.Discard)
