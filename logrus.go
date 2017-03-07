@@ -2,7 +2,6 @@ package udploghook
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -12,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/mailru/easyjson/jwriter"
 	"github.com/pkg/errors"
 )
 
@@ -29,6 +29,7 @@ type UDPHook struct {
 	debug    bool
 }
 
+//easyjson:json
 type logRecord struct {
 	Context   map[string]interface{} `json:"context,omitempty"`
 	AppName   string                 `json:"appname"`
@@ -145,21 +146,21 @@ func (h *UDPHook) Fire(entry *logrus.Entry) error {
 	}
 	rec.fromFields(entry.Data)
 
-	dump, err := json.Marshal(rec)
-	if err != nil {
+	// Marshal the log record to JSON string with a category prefix.
+	var w jwriter.Writer
+	w.RawString("logrus:")
+	rec.MarshalEasyJSON(&w)
+	if w.Error != nil {
 		return errors.Wrap(err, "UDPHook.Fire() - json.Marshall() error")
 	}
-
-	// Add a category to the beginning of the log entry followed by the json entry
-	buf := bytes.NewBuffer([]byte("logrus:"))
-	buf.Write(dump)
+	buf := w.Buffer.BuildBytes()
 
 	if h.debug {
-		fmt.Printf("%s\n", buf.String())
+		fmt.Printf("%s\n", string(buf))
 	}
 
 	// Send the buffer to udplog
-	err = h.sendUDP(buf.Bytes())
+	err = h.sendUDP(buf)
 	if err != nil {
 		return errors.Wrap(err, "UDPHook.Fire()")
 	}
