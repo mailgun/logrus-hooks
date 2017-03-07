@@ -1,4 +1,4 @@
-package udploghook_test
+package udploghook
 
 import (
 	"bytes"
@@ -8,14 +8,13 @@ import (
 	"testing"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/mailgun/logrus-udplog"
 	. "gopkg.in/check.v1"
 )
 
 func TestLogrusUDP(t *testing.T) { TestingT(t) }
 
 type LogrusUDPSuite struct {
-	server *udploghook.Server
+	server *Server
 }
 
 var _ = Suite(&LogrusUDPSuite{})
@@ -26,7 +25,7 @@ func (s *LogrusUDPSuite) TestFieldsToMap(c *C) {
 		"bar":  1,
 		"bean": true,
 	}
-	result := udploghook.FieldsToMap(fields)
+	result := fieldsToMap(fields)
 	c.Assert(result["foo"], Equals, "bar")
 	c.Assert(result["bar"], Equals, 1)
 	c.Assert(result["bean"], Equals, true)
@@ -40,7 +39,7 @@ func (s *LogrusUDPSuite) TestFieldsToMapNested(c *C) {
 		"bar":                1,
 		"bean":               true,
 	}
-	result := udploghook.FieldsToMap(fields)
+	result := fieldsToMap(fields)
 	c.Assert(result["foo"], Equals, "bar")
 	c.Assert(result["bar"], Equals, 1)
 	c.Assert(result["bean"], Equals, true)
@@ -54,7 +53,7 @@ func (s *LogrusUDPSuite) TestRequestToMap(c *C) {
 	req.Header.Add("User-Agent", "test-agent")
 	req.ParseForm()
 
-	result := udploghook.RequestToMap(req)
+	result := requestToMap(req)
 
 	c.Assert(result["headers"], DeepEquals, http.Header{"User-Agent": []string{"test-agent"}})
 	c.Assert(result["method"], Equals, "POST")

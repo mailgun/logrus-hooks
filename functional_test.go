@@ -1,4 +1,4 @@
-package udploghook_test
+package udploghook
 
 import (
 	"bytes"
@@ -8,19 +8,18 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/mailgun/logrus-udplog"
 	. "gopkg.in/check.v1"
 )
 
 type FunctionalTest struct {
-	server *udploghook.Server
+	server *Server
 }
 
 var _ = Suite(&FunctionalTest{})
 
 func (s *FunctionalTest) SetUpTest(c *C) {
 	var err error
-	s.server, err = udploghook.NewServer("127.0.0.1", 0)
+	s.server, err = NewServer("127.0.0.1", 0)
 	c.Assert(err, IsNil)
 }
 
@@ -29,7 +28,7 @@ func (s *FunctionalTest) TearDownTest(c *C) {
 }
 
 func (s *FunctionalTest) TestUDPHookINFO(c *C) {
-	hook, err := udploghook.New(s.server.Host(), s.server.Port())
+	hook, err := New(s.server.Host(), s.server.Port())
 	c.Assert(err, IsNil)
 
 	log := logrus.New()
@@ -46,7 +45,7 @@ func (s *FunctionalTest) TestUDPHookINFO(c *C) {
 }
 
 func (s *FunctionalTest) TestUDPHookExported(c *C) {
-	hook, err := udploghook.New(s.server.Host(), s.server.Port())
+	hook, err := New(s.server.Host(), s.server.Port())
 	c.Assert(err, IsNil)
 
 	logrus.SetOutput(ioutil.Discard)
@@ -62,7 +61,7 @@ func (s *FunctionalTest) TestUDPHookExported(c *C) {
 }
 
 func (s *FunctionalTest) TestUDPHookContext(c *C) {
-	hook, err := udploghook.New(s.server.Host(), s.server.Port())
+	hook, err := New(s.server.Host(), s.server.Port())
 	c.Assert(err, IsNil)
 
 	log := logrus.New()
@@ -85,7 +84,7 @@ func (s *FunctionalTest) TestUDPHookContext(c *C) {
 }
 
 func (s *FunctionalTest) TestUDPHookRequest(c *C) {
-	hook, err := udploghook.New(s.server.Host(), s.server.Port())
+	hook, err := New(s.server.Host(), s.server.Port())
 	c.Assert(err, IsNil)
 
 	log := logrus.New()

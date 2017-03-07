@@ -29,7 +29,7 @@ type UDPHook struct {
 	debug    bool
 }
 
-type LogRecord struct {
+type logRecord struct {
 	Context   map[string]interface{} `json:"context,omitempty"`
 	AppName   string                 `json:"appname"`
 	HostName  string                 `json:"hostname"`
@@ -43,25 +43,25 @@ type LogRecord struct {
 }
 
 func New(host string, port int) (*UDPHook, error) {
-	hook := UDPHook{}
+	h := UDPHook{}
 
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		return nil, err
 	}
 
-	hook.conn, err = net.DialUDP("udp", nil, addr)
+	h.conn, err = net.DialUDP("udp", nil, addr)
 	if err != nil {
 		return nil, err
 	}
 
-	if hook.hostName, err = os.Hostname(); err != nil {
-		hook.hostName = "unknown_host"
+	if h.hostName, err = os.Hostname(); err != nil {
+		h.hostName = "unknown_host"
 	}
-	hook.appName = filepath.Base(os.Args[0])
-	hook.pid = os.Getpid()
+	h.appName = filepath.Base(os.Args[0])
+	h.pid = os.Getpid()
 
-	return &hook, nil
+	return &h, nil
 }
 
 func expandNested(key string, value interface{}, dest map[string]interface{}) map[string]interface{} {
@@ -82,7 +82,7 @@ func expandNested(key string, value interface{}, dest map[string]interface{}) ma
 	}
 	switch value.(type) {
 	case *http.Request:
-		dest[key] = RequestToMap(value.(*http.Request))
+		dest[key] = requestToMap(value.(*http.Request))
 	default:
 		dest[key] = value
 	}
@@ -90,7 +90,7 @@ func expandNested(key string, value interface{}, dest map[string]interface{}) ma
 }
 
 // Given a *http.Request return a map with detailed information about the request
-func RequestToMap(req *http.Request) map[string]interface{} {
+func requestToMap(req *http.Request) map[string]interface{} {
 	return map[string]interface{}{
 		"headers":   req.Header,
 		"ip":        req.RemoteAddr,
@@ -103,7 +103,7 @@ func RequestToMap(req *http.Request) map[string]interface{} {
 }
 
 // Given a logrus.Fields struct convert the values to a standard map
-func FieldsToMap(fields logrus.Fields) map[string]interface{} {
+func fieldsToMap(fields logrus.Fields) map[string]interface{} {
 	result := make(map[string]interface{})
 	for key, value := range fields {
 		result = expandNested(key, value, result)
@@ -111,15 +111,15 @@ func FieldsToMap(fields logrus.Fields) map[string]interface{} {
 	return result
 }
 
-func (hook *UDPHook) Fire(entry *logrus.Entry) error {
+func (h *UDPHook) Fire(entry *logrus.Entry) error {
 	var caller *CallerInfo
 	var err error
 
 	caller = getCallerInfo()
 
-	rec := &LogRecord{
-		AppName:   hook.appName,
-		HostName:  hook.hostName,
+	rec := &logRecord{
+		AppName:   h.appName,
+		HostName:  h.hostName,
 		LogLevel:  strings.ToUpper(entry.Level.String()),
 		FileName:  caller.FilePath,
 		FuncName:  caller.FuncName,
@@ -127,11 +127,11 @@ func (hook *UDPHook) Fire(entry *logrus.Entry) error {
 		Message:   entry.Message,
 		Context:   nil,
 		Timestamp: Number(float64(entry.Time.UnixNano()) / 1000000000),
-		PID:       hook.pid,
+		PID:       h.pid,
 	}
 
 	if len(entry.Data) != 0 {
-		rec.Context = FieldsToMap(entry.Data)
+		rec.Context = fieldsToMap(entry.Data)
 	}
 
 	dump, err := json.Marshal(rec)
@@ -143,20 +143,20 @@ func (hook *UDPHook) Fire(entry *logrus.Entry) error {
 	buf := bytes.NewBuffer([]byte("logrus:"))
 	buf.Write(dump)
 
-	if hook.debug {
+	if h.debug {
 		fmt.Printf("%s\n", buf.String())
 	}
 
 	// Send the buffer to udplog
-	err = hook.sendUDP(buf.Bytes())
+	err = h.sendUDP(buf.Bytes())
 	if err != nil {
 		return errors.Wrap(err, "UDPHook.Fire()")
 	}
 	return nil
 }
 
-func (hook *UDPHook) sendUDP(buf []byte) error {
-	length, err := hook.conn.Write(buf)
+func (h *UDPHook) sendUDP(buf []byte) error {
+	length, err := h.conn.Write(buf)
 	if err != nil {
 		return errors.Wrap(err, "Write() error")
 	}
@@ -167,7 +167,7 @@ func (hook *UDPHook) sendUDP(buf []byte) error {
 }
 
 // Given an io reader send the contents of the reader to udplog
-func (hook *UDPHook) SendIO(input io.Reader) error {
+func (h *UDPHook) SendIO(input io.Reader) error {
 	// Append our identifier
 	buf := bytes.NewBuffer([]byte("logrus:"))
 	_, err := buf.ReadFrom(input)
@@ -175,12 +175,12 @@ func (hook *UDPHook) SendIO(input io.Reader) error {
 		return errors.Wrap(err, "UDPHook.SendIO()")
 	}
 
-	if hook.debug {
+	if h.debug {
 		fmt.Printf("%s\n", buf.String())
 	}
 
 	// Send to UDPLog
-	err = hook.sendUDP(buf.Bytes())
+	err = h.sendUDP(buf.Bytes())
 	if err != nil {
 		return errors.Wrap(err, "UDPHook.SendIO()")
 	}
@@ -188,7 +188,7 @@ func (hook *UDPHook) SendIO(input io.Reader) error {
 }
 
 // Levels returns the available logging levels.
-func (hook *UDPHook) Levels() []logrus.Level {
+func (h *UDPHook) Levels() []logrus.Level {
 	return []logrus.Level{
 		logrus.PanicLevel,
 		logrus.FatalLevel,
@@ -199,6 +199,6 @@ func (hook *UDPHook) Levels() []logrus.Level {
 	}
 }
 
-func (hook *UDPHook) SetDebug(set bool) {
-	hook.debug = set
+func (h *UDPHook) SetDebug(set bool) {
+	h.debug = set
 }
