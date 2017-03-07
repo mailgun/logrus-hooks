@@ -40,6 +40,34 @@ type logRecord struct {
 	Message   string                 `json:"message"`
 	Timestamp Number                 `json:"timestamp"`
 	PID       int                    `json:"pid"`
+	TID       string                 `json:"tid"`
+	ExcType   string                 `json:"excType"`
+	ExcText   string                 `json:"excText"`
+	ExcValue  string                 `json:"excValue"`
+}
+
+func (r *logRecord) fromFields(fields logrus.Fields) {
+	if len(fields) == 0 {
+		return
+	}
+	r.Context = make(map[string]interface{})
+	for k, v := range fields {
+		switch k {
+		case "err":
+			if v, ok := v.(error); ok {
+				r.ExcValue = v.Error()
+				r.ExcType = fmt.Sprintf("%T", v)
+				r.ExcText = fmt.Sprintf("%+v", v)
+				continue
+			}
+		case "tid":
+			if v, ok := v.(string); ok {
+				r.TID = v
+				continue
+			}
+		}
+		expandNested(k, v, r.Context)
+	}
 }
 
 func New(host string, port int) (*UDPHook, error) {
@@ -64,21 +92,17 @@ func New(host string, port int) (*UDPHook, error) {
 	return &h, nil
 }
 
-func expandNested(key string, value interface{}, dest map[string]interface{}) map[string]interface{} {
-	if dest == nil {
-		dest = make(map[string]interface{})
-	}
-
+func expandNested(key string, value interface{}, dest map[string]interface{}) {
 	if strings.ContainsRune(key, '.') {
 		parts := strings.SplitN(key, ".", 2)
 		// This nested value might already exist
 		nested, isMap := dest[parts[0]].(map[string]interface{})
 		if !isMap {
 			// if not a map, overwrite current entry and make it a map
-			nested = nil
+			nested = make(map[string]interface{})
+			dest[parts[0]] = nested
 		}
-		dest[parts[0]] = expandNested(parts[1], value, nested)
-		return dest
+		expandNested(parts[1], value, nested)
 	}
 	switch value.(type) {
 	case *http.Request:
@@ -86,7 +110,6 @@ func expandNested(key string, value interface{}, dest map[string]interface{}) ma
 	default:
 		dest[key] = value
 	}
-	return dest
 }
 
 // Given a *http.Request return a map with detailed information about the request
@@ -100,15 +123,6 @@ func requestToMap(req *http.Request) map[string]interface{} {
 		"url":       req.URL.String(),
 		"useragent": req.Header.Get("User-Agent"),
 	}
-}
-
-// Given a logrus.Fields struct convert the values to a standard map
-func fieldsToMap(fields logrus.Fields) map[string]interface{} {
-	result := make(map[string]interface{})
-	for key, value := range fields {
-		result = expandNested(key, value, result)
-	}
-	return result
 }
 
 func (h *UDPHook) Fire(entry *logrus.Entry) error {
@@ -129,10 +143,7 @@ func (h *UDPHook) Fire(entry *logrus.Entry) error {
 		Timestamp: Number(float64(entry.Time.UnixNano()) / 1000000000),
 		PID:       h.pid,
 	}
-
-	if len(entry.Data) != 0 {
-		rec.Context = fieldsToMap(entry.Data)
-	}
+	rec.fromFields(entry.Data)
 
 	dump, err := json.Marshal(rec)
 	if err != nil {
