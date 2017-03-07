@@ -39,6 +39,7 @@ type LogRecord struct {
 	LineNo    int                    `json:"lineno"`
 	Message   string                 `json:"message"`
 	Timestamp Number                 `json:"timestamp"`
+	PID       int                    `json:"pid"`
 }
 
 func New(host string, port int) (*UDPHook, error) {
@@ -126,6 +127,7 @@ func (hook *UDPHook) Fire(entry *logrus.Entry) error {
 		Message:   entry.Message,
 		Context:   nil,
 		Timestamp: Number(float64(entry.Time.UnixNano()) / 1000000000),
+		PID:       hook.pid,
 	}
 
 	if len(entry.Data) != 0 {
