@@ -3,16 +3,12 @@ package udploghook
 import (
 	"runtime"
 	"strings"
+
+	"github.com/mailgun/holster/stack"
 )
 
-type CallerInfo struct {
-	FilePath string
-	FuncName string
-	LineNo   int
-}
-
 // Returns the file, function and line number of the function that called logrus
-func getCallerInfo() *CallerInfo {
+func getCallerInfo() *stack.FrameInfo {
 	var rpc [5]uintptr
 
 	// iterate until we find non logrus function
@@ -24,7 +20,7 @@ func getCallerInfo() *CallerInfo {
 			continue
 		}
 		filePath, lineNo := f.FileLine(rpc[idx])
-		return &CallerInfo{filePath, funcName, lineNo}
+		return &stack.FrameInfo{File: filePath, Func: funcName, LineNo: lineNo}
 	}
-	return &CallerInfo{}
+	return &stack.FrameInfo{}
 }
