@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson74ee6e88DecodeGithubComMailgunLogrusUdplog(in *jlexer.Lexer, out *logRecord) {
+func easyjson500470b6DecodeGithubComMailgunLogrusUdplog(in *jlexer.Lexer, out *logRecord) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -98,7 +98,7 @@ func easyjson74ee6e88DecodeGithubComMailgunLogrusUdplog(in *jlexer.Lexer, out *l
 		in.Consumed()
 	}
 }
-func easyjson74ee6e88EncodeGithubComMailgunLogrusUdplog(out *jwriter.Writer, in logRecord) {
+func easyjson500470b6EncodeGithubComMailgunLogrusUdplog(out *jwriter.Writer, in logRecord) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -185,53 +185,61 @@ func easyjson74ee6e88EncodeGithubComMailgunLogrusUdplog(out *jwriter.Writer, in 
 	first = false
 	out.RawString("\"pid\":")
 	out.Int(int(in.PID))
-	if !first {
-		out.RawByte(',')
+	if in.TID != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"tid\":")
+		out.String(string(in.TID))
 	}
-	first = false
-	out.RawString("\"tid\":")
-	out.String(string(in.TID))
-	if !first {
-		out.RawByte(',')
+	if in.ExcType != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"excType\":")
+		out.String(string(in.ExcType))
 	}
-	first = false
-	out.RawString("\"excType\":")
-	out.String(string(in.ExcType))
-	if !first {
-		out.RawByte(',')
+	if in.ExcText != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"excText\":")
+		out.String(string(in.ExcText))
 	}
-	first = false
-	out.RawString("\"excText\":")
-	out.String(string(in.ExcText))
-	if !first {
-		out.RawByte(',')
+	if in.ExcValue != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"excValue\":")
+		out.String(string(in.ExcValue))
 	}
-	first = false
-	out.RawString("\"excValue\":")
-	out.String(string(in.ExcValue))
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
 func (v logRecord) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson74ee6e88EncodeGithubComMailgunLogrusUdplog(&w, v)
+	easyjson500470b6EncodeGithubComMailgunLogrusUdplog(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v logRecord) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson74ee6e88EncodeGithubComMailgunLogrusUdplog(w, v)
+	easyjson500470b6EncodeGithubComMailgunLogrusUdplog(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *logRecord) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson74ee6e88DecodeGithubComMailgunLogrusUdplog(&r, v)
+	easyjson500470b6DecodeGithubComMailgunLogrusUdplog(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *logRecord) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson74ee6e88DecodeGithubComMailgunLogrusUdplog(l, v)
+	easyjson500470b6DecodeGithubComMailgunLogrusUdplog(l, v)
 }
