@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/mailgun/logrus-udplog"
+	"github.com/mailgun/logrus-hooks/udploghook"
 	"github.com/thrawn01/args"
 )
 
