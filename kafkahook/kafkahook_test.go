@@ -1,77 +1,83 @@
-package udploghook_test
+package kafkahook_test
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http/httptest"
 	"path"
 	"strings"
 	"testing"
 
+	"github.com/Shopify/sarama"
+	"github.com/Shopify/sarama/mocks"
 	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/errors"
 	"github.com/mailgun/logrus-hooks/common"
-	"github.com/mailgun/logrus-hooks/udploghook"
+	"github.com/mailgun/logrus-hooks/kafkahook"
 	. "gopkg.in/check.v1"
 )
 
-func TestUDPLogHook(t *testing.T) { TestingT(t) }
+func TestKafkaHook(t *testing.T) { TestingT(t) }
 
-type UDPLogHookTests struct {
-	server     *udploghook.Server
-	udploghook *udploghook.UDPHook
-	log        *logrus.Logger
+type KafkaHookTests struct {
+	kafkahook *kafkahook.KafkaHook
+	producer  *mocks.AsyncProducer
+	log       *logrus.Logger
 }
 
-var _ = Suite(&UDPLogHookTests{})
+var _ = Suite(&KafkaHookTests{})
 
-func (s *UDPLogHookTests) SetUpTest(c *C) {
+func (s *KafkaHookTests) SetUpTest(c *C) {
 	var err error
-	// Create a new udp server
-	s.server, err = udploghook.NewServer("127.0.0.1", 0)
-	c.Assert(err, IsNil)
 
-	// Create the udploghook
-	s.udploghook, err = udploghook.New(s.server.Host(), s.server.Port())
-	s.udploghook.SetDebug(true)
+	conf := sarama.NewConfig()
+	conf.Producer.Return.Successes = true
+
+	// Setup our AsyncProducer Mock
+	s.producer = mocks.NewAsyncProducer(c, conf)
+	s.producer.ExpectInputAndSucceed()
+
+	// Create the hook
+	s.kafkahook, err = kafkahook.New(kafkahook.Config{
+		Producer: s.producer,
+		Topic:    "test",
+	})
+	//s.kafkahook.SetDebug(true)
 	c.Assert(err, IsNil)
 
 	// Tell logrus about our udploghook
 	s.log = logrus.New()
 	s.log.Out = ioutil.Discard
-	s.log.Hooks.Add(s.udploghook)
-
+	s.log.Hooks.Add(s.kafkahook)
 }
 
-func (s *UDPLogHookTests) TearDownTest(c *C) {
-	s.server.Close()
-}
-
-func (s *UDPLogHookTests) TestUDPHookINFO(c *C) {
+func (s *KafkaHookTests) TestKafkaHookINFO(c *C) {
 	s.log.Info("this is a test")
 
-	req := s.server.GetRequest()
+	req := GetMsg(s.producer)
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["context"], Equals, nil)
 	c.Assert(req["logLevel"], Equals, "INFO")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestUDPHookINFO"), Equals, true)
+	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
+	c.Assert(strings.Contains(req["funcName"].(string), "TestKafkaHookINFO"), Equals, true)
 }
 
-func (s *UDPLogHookTests) TestUDPHookExported(c *C) {
+func (s *KafkaHookTests) TestKafkaHookExported(c *C) {
 	logrus.SetOutput(ioutil.Discard)
-	logrus.AddHook(s.udploghook)
+	logrus.AddHook(s.kafkahook)
 	logrus.Info("this is a test")
 
-	req := s.server.GetRequest()
+	req := GetMsg(s.producer)
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["context"], Equals, nil)
 	c.Assert(req["logLevel"], Equals, "INFO")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestUDPHookExported"), Equals, true)
+	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
+	c.Assert(strings.Contains(req["funcName"].(string), "TestKafkaHookExported"), Equals, true)
 }
 
-func (s *UDPLogHookTests) TestUDPHookContext(c *C) {
+func (s *KafkaHookTests) TestKafkaHookContext(c *C) {
 	s.log.WithFields(logrus.Fields{
 		"http.request": "http://localhost",
 		"domain":       "example.com",
@@ -79,11 +85,11 @@ func (s *UDPLogHookTests) TestUDPHookContext(c *C) {
 		"bar":          1,
 	}).Error("this is a test")
 
-	req := s.server.GetRequest()
+	req := GetMsg(s.producer)
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["logLevel"], Equals, "ERROR")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestUDPHookContext"), Equals, true)
+	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
+	c.Assert(strings.Contains(req["funcName"].(string), "TestKafkaHookContext"), Equals, true)
 
 	context := req["context"].(map[string]interface{})
 	c.Assert(context["http"].(map[string]interface{})["request"], Equals, "http://localhost")
@@ -97,7 +103,7 @@ func (s *UDPLogHookTests) TestUDPHookContext(c *C) {
 	c.Assert(common.Exists(context, "excText"), Equals, false)
 }
 
-func (s *UDPLogHookTests) TestUDPHookRequest(c *C) {
+func (s *KafkaHookTests) TestKafkaHookRequest(c *C) {
 	body := bytes.NewBuffer([]byte("body"))
 	req := httptest.NewRequest("POST", "http://example.com?param1=1&param2=2", body)
 	req.Header.Add("User-Agent", "test-agent")
@@ -107,7 +113,7 @@ func (s *UDPLogHookTests) TestUDPHookRequest(c *C) {
 		"http": req,
 	}).Error("Get Called")
 
-	resp := s.server.GetRequest()
+	resp := GetMsg(s.producer)
 	c.Assert(resp["message"], Equals, "Get Called")
 	c.Assert(resp["logLevel"], Equals, "ERROR")
 
@@ -121,36 +127,30 @@ func (s *UDPLogHookTests) TestUDPHookRequest(c *C) {
 	c.Assert(http["useragent"], Equals, "test-agent")
 }
 
-func (s *UDPLogHookTests) TestFromErr(c *C) {
+func (s *KafkaHookTests) TestFromErr(c *C) {
 	cause := errors.New("foo")
 	err := errors.Wrap(cause, "bar")
 
 	s.log.WithFields(errors.ToLogrus(err)).Info("Info Called")
 
-	req := s.server.GetRequest()
-	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(req["lineno"], Equals, float64(126))
+	req := GetMsg(s.producer)
+	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
+	c.Assert(req["lineno"], Equals, float64(136))
 	c.Assert(req["funcName"], Equals, "TestFromErr()")
 	c.Assert(req["excType"], Equals, "*errors.withStack")
 	c.Assert(req["excValue"], Equals, "bar: foo")
-	c.Assert(strings.Contains(req["excText"].(string), "(*UDPLogHookTests).TestFromErr"), Equals, true)
-	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go:125"), Equals, true)
+	c.Assert(strings.Contains(req["excText"].(string), "(*KafkaHookTests).TestFromErr"), Equals, true)
+	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/kafkahook/kafkahook_test.go:135"), Equals, true)
 }
 
-func (s *UDPLogHookTests) TestTIDAsString(c *C) {
-	s.log.WithFields(logrus.Fields{"tid": "foo"}).Info("Info Called")
-	req := s.server.GetRequest()
-	c.Assert(req["tid"], Equals, "foo")
-}
+func GetMsg(producer *mocks.AsyncProducer) map[string]interface{} {
+	var result map[string]interface{}
+	msg := <-producer.Successes()
+	buf, _ := msg.Value.Encode()
 
-func (s *UDPLogHookTests) TestTIDAsOther(c *C) {
-	s.log.WithFields(logrus.Fields{"tid": 10}).Info("Info Called")
-	req := s.server.GetRequest()
-
-	// Should not exist since tid is not a string
-	c.Assert(common.Exists(req, "tid"), Equals, false)
-
-	// Should instead be in context as an int
-	context := req["context"].(map[string]interface{})
-	c.Assert(context["tid"], Equals, float64(10))
+	fmt.Printf("%s\n", buf)
+	if err := json.Unmarshal(buf, &result); err != nil {
+		fmt.Printf("json.Unmarshal() error: %s\n", err)
+	}
+	return result
 }

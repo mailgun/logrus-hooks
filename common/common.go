@@ -2,10 +2,10 @@ package common
 
 import (
 	"net/http"
+	"runtime"
 	"strings"
 
 	"github.com/mailgun/holster/stack"
-	"runtime"
 )
 
 func ExpandNested(key string, value interface{}, dest map[string]interface{}) {
@@ -57,4 +57,10 @@ func GetLogrusCaller() *stack.FrameInfo {
 		return &stack.FrameInfo{File: filePath, Func: funcName, LineNo: lineNo}
 	}
 	return &stack.FrameInfo{}
+}
+
+// Returns true if the key exists in the map
+func Exists(haystack map[string]interface{}, needle string) bool {
+	_, exists := haystack[needle]
+	return exists
 }

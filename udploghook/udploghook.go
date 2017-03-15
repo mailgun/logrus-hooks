@@ -1,14 +1,13 @@
 package udploghook
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"bytes"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/stack"
