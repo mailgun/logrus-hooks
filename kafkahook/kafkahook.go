@@ -36,9 +36,12 @@ func New(conf Config) (*KafkaHook, error) {
 	var err error
 
 	kafkaConfig := sarama.NewConfig()
-	kafkaConfig.Producer.RequiredAcks = sarama.WaitForLocal       // Only wait for the leader to ack
-	kafkaConfig.Producer.Compression = sarama.CompressionSnappy   // Compress messages
-	kafkaConfig.Producer.Flush.Frequency = 200 * time.Millisecond // Flush batches every 200ms
+	kafkaConfig.Producer.RequiredAcks = sarama.WaitForAll
+	kafkaConfig.Producer.Compression = sarama.CompressionSnappy
+	kafkaConfig.Producer.Flush.Frequency = 200 * time.Millisecond
+	kafkaConfig.Producer.Retry.Backoff = 10 * time.Second
+	kafkaConfig.Producer.Retry.Max = 6
+	kafkaConfig.Producer.Return.Errors = true
 
 	// If the user failed to provide a producer create one
 	if conf.Producer == nil {
@@ -103,9 +106,9 @@ func (h *KafkaHook) Fire(entry *logrus.Entry) error {
 func (h *KafkaHook) sendKafka(buf []byte) error {
 	select {
 	case h.producer.Input() <- &sarama.ProducerMessage{
+		Value: sarama.ByteEncoder(buf),
 		Topic: h.topic,
 		Key:   nil,
-		Value: sarama.ByteEncoder(buf),
 	}:
 	case err := <-h.producer.Errors():
 		return err
@@ -147,4 +150,9 @@ func (h *KafkaHook) Levels() []logrus.Level {
 
 func (h *KafkaHook) SetDebug(set bool) {
 	h.debug = set
+}
+
+// Close the kakfa producer and flush any remaining logs
+func (h *KafkaHook) Close() error {
+	return h.producer.Close()
 }

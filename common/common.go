@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/stack"
 )
 
@@ -63,4 +64,13 @@ func GetLogrusCaller() *stack.FrameInfo {
 func Exists(haystack map[string]interface{}, needle string) bool {
 	_, exists := haystack[needle]
 	return exists
+}
+
+// Convert a map to logrus fields
+func ToFields(items map[string]string) logrus.Fields {
+	result := logrus.Fields{}
+	for key, value := range items {
+		result[key] = value
+	}
+	return result
 }
