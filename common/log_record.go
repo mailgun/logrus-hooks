@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/mailgun/holster/errors"
+	"github.com/mailgun/holster/stack"
 )
 
 type Number float64
@@ -37,6 +39,30 @@ func (r *LogRecord) FromFields(fields logrus.Fields) {
 	r.Context = make(map[string]interface{})
 	for k, v := range fields {
 		switch k {
+		case "err":
+			// Record details of the error
+			if v, ok := v.(error); ok {
+				r.ExcValue = v.Error()
+				r.ExcType = fmt.Sprintf("%T", v)
+				r.ExcText = fmt.Sprintf("%+v", v)
+
+				// Extract the stack info if provided
+				if v, ok := v.(stack.HasStackTrace); ok {
+					trace := v.StackTrace()
+					caller := stack.GetLastFrame(trace)
+					r.FuncName = caller.Func
+					r.LineNo = caller.LineNo
+					r.FileName = caller.File
+				}
+
+				// Extract context if provided
+				if ctx, ok := v.(errors.HasContext); ok {
+					for ck, cv := range ctx.Context() {
+						r.Context[ck] = cv
+					}
+				}
+				continue
+			}
 		case "tid":
 			if v, ok := v.(string); ok {
 				r.TID = v
