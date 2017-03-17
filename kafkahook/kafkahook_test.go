@@ -87,6 +87,7 @@ func (s *KafkaHookTests) TestKafkaHookContext(c *C) {
 
 	req := GetMsg(s.producer)
 	c.Assert(req["message"], Equals, "this is a test")
+	c.Assert(req["lineno"], Equals, float64(86))
 	c.Assert(req["logLevel"], Equals, "ERROR")
 	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
 	c.Assert(strings.Contains(req["funcName"].(string), "TestKafkaHookContext"), Equals, true)

@@ -44,17 +44,18 @@ func RequestToMap(req *http.Request) map[string]interface{} {
 
 // Returns the file, function and line number of the function that called logrus
 func GetLogrusCaller() *stack.FrameInfo {
-	var rpc [5]uintptr
+	var frames [32]uintptr
 
 	// iterate until we find non logrus function
-	length := runtime.Callers(5, rpc[:])
+	length := runtime.Callers(3, frames[:])
 	for idx := 0; idx < (length - 1); idx++ {
-		f := runtime.FuncForPC(rpc[idx])
+		pc := uintptr(frames[idx]) - 1
+		f := runtime.FuncForPC(pc)
 		funcName := f.Name()
 		if strings.HasPrefix(strings.ToLower(funcName), "github.com/sirupsen") {
 			continue
 		}
-		filePath, lineNo := f.FileLine(rpc[idx])
+		filePath, lineNo := f.FileLine(pc)
 		return &stack.FrameInfo{File: filePath, Func: funcName, LineNo: lineNo}
 	}
 	return &stack.FrameInfo{}
