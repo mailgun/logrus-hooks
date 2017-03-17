@@ -17,6 +17,7 @@ func (n Number) MarshalJSON() ([]byte, error) {
 //easyjson:json
 type LogRecord struct {
 	Context   map[string]interface{} `json:"context,omitempty"`
+	Category  string                 `json:"category,omitempty"`
 	AppName   string                 `json:"appname"`
 	HostName  string                 `json:"hostname"`
 	LogLevel  string                 `json:"logLevel"`

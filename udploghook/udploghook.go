@@ -71,7 +71,7 @@ func (h *UDPHook) Fire(entry *logrus.Entry) error {
 	w.RawString("logrus:")
 	rec.MarshalEasyJSON(&w)
 	if w.Error != nil {
-		return errors.Wrap(err, "UDPHook.Fire() - json.Marshall() error")
+		return errors.Wrap(w.Error, "UDPHook.Fire() - json.Marshall() error")
 	}
 	buf := w.Buffer.BuildBytes()
 

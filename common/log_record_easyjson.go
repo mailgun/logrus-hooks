@@ -4,7 +4,6 @@ package common
 
 import (
 	json "encoding/json"
-
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -18,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson500470b6DecodeGithubComMailgunLogrusUdplog(in *jlexer.Lexer, out *LogRecord) {
+func easyjson500470b6DecodeGithubComMailgunLogrusHooksCommon(in *jlexer.Lexer, out *LogRecord) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -63,6 +62,8 @@ func easyjson500470b6DecodeGithubComMailgunLogrusUdplog(in *jlexer.Lexer, out *L
 				}
 				in.Delim('}')
 			}
+		case "category":
+			out.Category = string(in.String())
 		case "appname":
 			out.AppName = string(in.String())
 		case "hostname":
@@ -99,7 +100,7 @@ func easyjson500470b6DecodeGithubComMailgunLogrusUdplog(in *jlexer.Lexer, out *L
 		in.Consumed()
 	}
 }
-func easyjson500470b6EncodeGithubComMailgunLogrusUdplog(out *jwriter.Writer, in LogRecord) {
+func easyjson500470b6EncodeGithubComMailgunLogrusHooksCommon(out *jwriter.Writer, in LogRecord) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -131,6 +132,14 @@ func easyjson500470b6EncodeGithubComMailgunLogrusUdplog(out *jwriter.Writer, in 
 			}
 			out.RawByte('}')
 		}
+	}
+	if in.Category != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"category\":")
+		out.String(string(in.Category))
 	}
 	if !first {
 		out.RawByte(',')
@@ -224,23 +233,23 @@ func easyjson500470b6EncodeGithubComMailgunLogrusUdplog(out *jwriter.Writer, in 
 // MarshalJSON supports json.Marshaler interface
 func (v LogRecord) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson500470b6EncodeGithubComMailgunLogrusUdplog(&w, v)
+	easyjson500470b6EncodeGithubComMailgunLogrusHooksCommon(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v LogRecord) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson500470b6EncodeGithubComMailgunLogrusUdplog(w, v)
+	easyjson500470b6EncodeGithubComMailgunLogrusHooksCommon(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *LogRecord) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson500470b6DecodeGithubComMailgunLogrusUdplog(&r, v)
+	easyjson500470b6DecodeGithubComMailgunLogrusHooksCommon(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *LogRecord) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson500470b6DecodeGithubComMailgunLogrusUdplog(l, v)
+	easyjson500470b6DecodeGithubComMailgunLogrusHooksCommon(l, v)
 }

@@ -72,6 +72,7 @@ func (h *KafkaHook) Fire(entry *logrus.Entry) error {
 	caller = common.GetLogrusCaller()
 
 	rec := &common.LogRecord{
+		Category:  "logrus",
 		AppName:   h.appName,
 		HostName:  h.hostName,
 		LogLevel:  strings.ToUpper(entry.Level.String()),
@@ -88,7 +89,7 @@ func (h *KafkaHook) Fire(entry *logrus.Entry) error {
 	var w jwriter.Writer
 	rec.MarshalEasyJSON(&w)
 	if w.Error != nil {
-		return errors.Wrap(err, "while marshalling json")
+		return errors.Wrap(w.Error, "while marshalling json")
 	}
 	buf := w.Buffer.BuildBytes()
 
@@ -98,7 +99,7 @@ func (h *KafkaHook) Fire(entry *logrus.Entry) error {
 
 	err = h.sendKafka(buf)
 	if err != nil {
-		return errors.Wrap(err, "while sending to kafka")
+		return errors.Wrap(err, "while sending")
 	}
 	return nil
 }
@@ -131,7 +132,7 @@ func (h *KafkaHook) SendIO(input io.Reader) error {
 
 	err = h.sendKafka(buf.Bytes())
 	if err != nil {
-		return errors.Wrap(err, "while sending to kafka")
+		return errors.Wrap(err, "while sending")
 	}
 	return nil
 }
