@@ -136,9 +136,9 @@ func (s *KafkaHookTests) TestFromErr(c *C) {
 
 	req := GetMsg(s.producer)
 	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
-	c.Assert(req["lineno"], Equals, float64(132))
+	c.Assert(req["lineno"], Equals, float64(133))
 	c.Assert(req["funcName"], Equals, "TestFromErr()")
-	c.Assert(req["excType"], Equals, "*errors.withStack")
+	c.Assert(req["excType"], Equals, "*errors.fundamental")
 	c.Assert(req["excValue"], Equals, "bar: foo")
 	c.Assert(strings.Contains(req["excText"].(string), "(*KafkaHookTests).TestFromErr"), Equals, true)
 	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/kafkahook/kafkahook_test.go"), Equals, true)

@@ -44,7 +44,7 @@ func (r *LogRecord) FromFields(fields logrus.Fields) {
 			// Record details of the error
 			if v, ok := v.(error); ok {
 				r.ExcValue = v.Error()
-				r.ExcType = fmt.Sprintf("%T", v)
+				r.ExcType = fmt.Sprintf("%T", errors.Cause(v))
 				r.ExcText = fmt.Sprintf("%+v", v)
 
 				// Extract the stack info if provided

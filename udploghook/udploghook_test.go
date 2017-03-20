@@ -131,7 +131,7 @@ func (s *UDPLogHookTests) TestFromErr(c *C) {
 	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
 	c.Assert(req["lineno"], Equals, float64(126))
 	c.Assert(req["funcName"], Equals, "TestFromErr()")
-	c.Assert(req["excType"], Equals, "*errors.withStack")
+	c.Assert(req["excType"], Equals, "*errors.fundamental")
 	c.Assert(req["excValue"], Equals, "bar: foo")
 	c.Assert(strings.Contains(req["excText"].(string), "(*UDPLogHookTests).TestFromErr"), Equals, true)
 	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go:125"), Equals, true)
