@@ -8,7 +8,8 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/mailgun/logrus-udplog"
+	"github.com/mailgun/logrus-hooks/common"
+	"github.com/mailgun/logrus-hooks/udploghook"
 	"github.com/thrawn01/args"
 )
 
@@ -17,14 +18,6 @@ func checkErr(msg string, err error) {
 		fmt.Fprintf(os.Stderr, "%s - %s\n", msg, err)
 		os.Exit(1)
 	}
-}
-
-func ToFields(items map[string]string) logrus.Fields {
-	result := logrus.Fields{}
-	for key, value := range items {
-		result[key] = value
-	}
-	return result
 }
 
 func main() {
@@ -87,7 +80,7 @@ func main() {
 	logrus.AddHook(hook)
 
 	if opts.IsSet("other") {
-		logrus.WithFields(ToFields(opts.StringMap("other"))).Info(opts.String("message"))
+		logrus.WithFields(common.ToFields(opts.StringMap("other"))).Info(opts.String("message"))
 	} else {
 		logrus.Info(opts.String("message"))
 	}
