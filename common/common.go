@@ -52,7 +52,7 @@ func GetLogrusCaller() *stack.FrameInfo {
 		pc := uintptr(frames[idx]) - 1
 		f := runtime.FuncForPC(pc)
 		funcName := f.Name()
-		if strings.HasPrefix(strings.ToLower(funcName), "github.com/sirupsen") {
+		if strings.Contains(strings.ToLower(funcName), "github.com/sirupsen") {
 			continue
 		}
 		filePath, lineNo := f.FileLine(pc)
