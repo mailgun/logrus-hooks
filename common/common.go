@@ -30,8 +30,13 @@ func ExpandNested(key string, value interface{}, dest map[string]interface{}) {
 
 // Given a *http.Request return a map with detailed information about the request
 func RequestToMap(req *http.Request) map[string]interface{} {
+	// Scrub auth information
+	headers := req.Header
+	headers.Del("Authorization")
+	headers.Del("Cookie")
+
 	return map[string]interface{}{
-		"headers":   req.Header,
+		"headers":   headers,
 		"ip":        req.RemoteAddr,
 		"method":    req.Method,
 		"params":    req.Form,
