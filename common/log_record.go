@@ -99,6 +99,11 @@ func (r *LogRecord) FromFields(fields logrus.Fields) {
 				r.FileName = v
 				continue
 			}
+		case "category":
+			if v, ok := v.(string); ok {
+				r.Category = v
+				continue
+			}
 		}
 		ExpandNested(k, v, r.Context)
 	}
