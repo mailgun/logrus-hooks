@@ -1,10 +1,13 @@
 package common
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"runtime"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/stack"
 )
 
@@ -19,6 +22,7 @@ func ExpandNested(key string, value interface{}, dest map[string]interface{}) {
 			dest[parts[0]] = nested
 		}
 		ExpandNested(parts[1], value, nested)
+		return
 	}
 	switch value.(type) {
 	case *http.Request:
@@ -30,14 +34,34 @@ func ExpandNested(key string, value interface{}, dest map[string]interface{}) {
 
 // Given a *http.Request return a map with detailed information about the request
 func RequestToMap(req *http.Request) map[string]interface{} {
+	var form []byte
+	var err error
+
+	// Scrub auth information
+	headers := req.Header
+	headers.Del("Authorization")
+	headers.Del("Cookie")
+
+	if len(req.Form) != 0 {
+		form, err = json.MarshalIndent(req.Form, "", "  ")
+		if err != nil {
+			form = []byte(fmt.Sprintf("JSON Encode Error: %s", err))
+		}
+	}
+
+	headersJSON, err := json.MarshalIndent(headers, "", "  ")
+	if err != nil {
+		headersJSON = []byte(fmt.Sprintf("JSON Encode Error: %s", err))
+	}
+
 	return map[string]interface{}{
-		"headers":   req.Header,
-		"ip":        req.RemoteAddr,
-		"method":    req.Method,
-		"params":    req.Form,
-		"size":      req.ContentLength,
-		"url":       req.URL.String(),
-		"useragent": req.Header.Get("User-Agent"),
+		"headers-json": string(headersJSON),
+		"ip":           req.RemoteAddr,
+		"method":       req.Method,
+		"params-json":  string(form),
+		"size":         req.ContentLength,
+		"url":          req.URL.String(),
+		"useragent":    req.Header.Get("User-Agent"),
 	}
 }
 
@@ -58,4 +82,19 @@ func GetLogrusCaller() *stack.FrameInfo {
 		return &stack.FrameInfo{File: filePath, Func: funcName, LineNo: lineNo}
 	}
 	return &stack.FrameInfo{}
+}
+
+// Returns true if the key exists in the map
+func Exists(haystack map[string]interface{}, needle string) bool {
+	_, exists := haystack[needle]
+	return exists
+}
+
+// Convert a map to logrus fields
+func ToFields(items map[string]string) logrus.Fields {
+	result := logrus.Fields{}
+	for key, value := range items {
+		result[key] = value
+	}
+	return result
 }

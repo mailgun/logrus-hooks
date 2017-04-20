@@ -2,19 +2,17 @@ package common_test
 
 import (
 	"bytes"
-	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 
 	"github.com/Sirupsen/logrus"
-	. "gopkg.in/check.v1"
 	"github.com/mailgun/logrus-hooks/common"
+	. "gopkg.in/check.v1"
 )
 
 func TestCommon(t *testing.T) { TestingT(t) }
 
-type CommonTestSuite struct {}
+type CommonTestSuite struct{}
 
 var _ = Suite(&CommonTestSuite{})
 
@@ -56,10 +54,23 @@ func (s *CommonTestSuite) TestRequestToMap(c *C) {
 
 	result := common.RequestToMap(req)
 
-	c.Assert(result["headers"], DeepEquals, http.Header{"User-Agent": []string{"test-agent"}})
+	c.Assert(result["headers-json"], Equals, ""+
+		"{\n"+
+		"  \"User-Agent\": [\n"+
+		"    \"test-agent\"\n"+
+		"  ]\n"+
+		"}")
 	c.Assert(result["method"], Equals, "POST")
 	c.Assert(result["ip"], Equals, "192.0.2.1:1234")
-	c.Assert(result["params"], DeepEquals, url.Values{"param2": []string{"2"}, "param1": []string{"1"}})
+	c.Assert(result["params-json"], Equals, ""+
+		"{\n"+
+		"  \"param1\": [\n"+
+		"    \"1\"\n"+
+		"  ],\n"+
+		"  \"param2\": [\n"+
+		"    \"2\"\n"+
+		"  ]\n"+
+		"}")
 	c.Assert(result["size"], Equals, int64(4))
 	c.Assert(result["url"], Equals, "http://example.com?param1=1&param2=2")
 	c.Assert(result["useragent"], Equals, "test-agent")

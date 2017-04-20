@@ -119,10 +119,23 @@ func (s *KafkaHookTests) TestKafkaHookRequest(c *C) {
 	c.Assert(resp["logLevel"], Equals, "ERROR")
 
 	http := resp["context"].(map[string]interface{})["http"].(map[string]interface{})
-	c.Assert(http["headers"], DeepEquals, map[string]interface{}{"User-Agent": []interface{}{"test-agent"}})
+	c.Assert(http["headers-json"], Equals, ""+
+		"{\n"+
+		"  \"User-Agent\": [\n"+
+		"    \"test-agent\"\n"+
+		"  ]\n"+
+		"}")
 	c.Assert(http["method"], DeepEquals, "POST")
 	c.Assert(http["ip"], Equals, "192.0.2.1:1234")
-	c.Assert(http["params"], DeepEquals, map[string]interface{}{"param1": []interface{}{"1"}, "param2": []interface{}{"2"}})
+	c.Assert(http["params-json"], Equals, ""+
+		"{\n"+
+		"  \"param1\": [\n"+
+		"    \"1\"\n"+
+		"  ],\n"+
+		"  \"param2\": [\n"+
+		"    \"2\"\n"+
+		"  ]\n"+
+		"}")
 	c.Assert(http["size"], Equals, float64(4))
 	c.Assert(http["url"], Equals, "http://example.com?param1=1&param2=2")
 	c.Assert(http["useragent"], Equals, "test-agent")
@@ -136,7 +149,7 @@ func (s *KafkaHookTests) TestFromErr(c *C) {
 
 	req := GetMsg(s.producer)
 	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
-	c.Assert(req["lineno"], Equals, float64(133))
+	c.Assert(req["lineno"], Equals, float64(146))
 	c.Assert(req["funcName"], Equals, "TestFromErr()")
 	c.Assert(req["excType"], Equals, "*errors.fundamental")
 	c.Assert(req["excValue"], Equals, "bar: foo")
