@@ -112,10 +112,23 @@ func (s *UDPLogHookTests) TestUDPHookRequest(c *C) {
 	c.Assert(resp["logLevel"], Equals, "ERROR")
 
 	http := resp["context"].(map[string]interface{})["http"].(map[string]interface{})
-	c.Assert(http["headers"], DeepEquals, map[string]interface{}{"User-Agent": []interface{}{"test-agent"}})
+	c.Assert(http["headers-json"], Equals, ""+
+		"{\n"+
+		"  \"User-Agent\": [\n"+
+		"    \"test-agent\"\n"+
+		"  ]\n"+
+		"}")
 	c.Assert(http["method"], DeepEquals, "POST")
 	c.Assert(http["ip"], Equals, "192.0.2.1:1234")
-	c.Assert(http["params"], DeepEquals, map[string]interface{}{"param1": []interface{}{"1"}, "param2": []interface{}{"2"}})
+	c.Assert(http["params-json"], Equals, ""+
+		"{\n"+
+		"  \"param1\": [\n"+
+		"    \"1\"\n"+
+		"  ],\n"+
+		"  \"param2\": [\n"+
+		"    \"2\"\n"+
+		"  ]\n"+
+		"}")
 	c.Assert(http["size"], Equals, float64(4))
 	c.Assert(http["url"], Equals, "http://example.com?param1=1&param2=2")
 	c.Assert(http["useragent"], Equals, "test-agent")
@@ -129,12 +142,12 @@ func (s *UDPLogHookTests) TestFromErr(c *C) {
 
 	req := s.server.GetRequest()
 	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(req["lineno"], Equals, float64(126))
+	c.Assert(req["lineno"], Equals, float64(139))
 	c.Assert(req["funcName"], Equals, "TestFromErr()")
 	c.Assert(req["excType"], Equals, "*errors.fundamental")
 	c.Assert(req["excValue"], Equals, "bar: foo")
 	c.Assert(strings.Contains(req["excText"].(string), "(*UDPLogHookTests).TestFromErr"), Equals, true)
-	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go:125"), Equals, true)
+	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go:139"), Equals, true)
 }
 
 func (s *UDPLogHookTests) TestTIDAsString(c *C) {
