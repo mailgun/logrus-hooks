@@ -84,6 +84,7 @@ func (s *CommonTestSuite) TestAssertions(c *C) {
 		"excFuncName": "foo",
 		"excLineno":   1,
 		"excFileName": "foo",
+		"category":    "foo-bar",
 	}
 	r := common.LogRecord{}
 
@@ -97,6 +98,7 @@ func (s *CommonTestSuite) TestAssertions(c *C) {
 	c.Assert(r.FuncName, Equals, "foo")
 	c.Assert(r.LineNo, Equals, 1)
 	c.Assert(r.FileName, Equals, "foo")
+	c.Assert(r.Category, Equals, "foo-bar")
 }
 
 func (s *CommonTestSuite) TestNegativeAssertions(c *C) {
@@ -107,6 +109,7 @@ func (s *CommonTestSuite) TestNegativeAssertions(c *C) {
 		"excFuncName": 10,
 		"excLineno":   "1",
 		"excFileName": 10,
+		"category":    10,
 	}
 	r := common.LogRecord{}
 
@@ -120,6 +123,7 @@ func (s *CommonTestSuite) TestNegativeAssertions(c *C) {
 	c.Assert(r.FuncName, Equals, "")
 	c.Assert(r.LineNo, Equals, 0)
 	c.Assert(r.FileName, Equals, "")
+	c.Assert(r.Category, Equals, "")
 
 	c.Assert(r.Context["tid"], Equals, 10)
 	c.Assert(r.Context["excValue"], Equals, 10)
