@@ -44,7 +44,7 @@ func main() {
 		Help("address where udplog is listening")
 
 	// Parser and set global options
-	opts := parser.ParseArgsSimple(nil)
+	opts := parser.ParseSimple(nil)
 
 	parts := strings.Split(opts.String("address"), ":")
 	if len(parts) != 2 {

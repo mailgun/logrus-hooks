@@ -45,7 +45,7 @@ func main() {
 		Help("the topic to publish the log messge too")
 
 	// Parser and set global options
-	opts := parser.ParseArgsSimple(nil)
+	opts := parser.ParseSimple(nil)
 
 	hook, err := kafkahook.New(kafkahook.Config{
 		Endpoints: opts.StringSlice("endpoints"),
