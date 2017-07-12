@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/errors"
 	"github.com/mailgun/holster/stack"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailru/easyjson/jwriter"
+	"github.com/sirupsen/logrus"
 )
 
 type KafkaHook struct {

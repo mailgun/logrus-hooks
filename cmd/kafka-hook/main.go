@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/Shopify/sarama"
-	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailgun/logrus-hooks/kafkahook"
+	"github.com/sirupsen/logrus"
 	"github.com/thrawn01/args"
 )
 

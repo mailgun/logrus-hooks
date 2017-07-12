@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailgun/logrus-hooks/udploghook"
+	"github.com/sirupsen/logrus"
 	"github.com/thrawn01/args"
 )
 

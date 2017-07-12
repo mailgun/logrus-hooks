@@ -3,9 +3,9 @@ package common
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/errors"
 	"github.com/mailgun/holster/stack"
+	"github.com/sirupsen/logrus"
 )
 
 type Number float64

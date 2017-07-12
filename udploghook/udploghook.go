@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/stack"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailru/easyjson/jwriter"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type UDPHook struct {

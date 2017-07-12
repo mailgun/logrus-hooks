@@ -6,7 +6,7 @@ A Logrus Hook for sending log info to [UDPLog](https://github.com/mochi/udplog)
 # Usage
 ```go
 import (
-    "github.com/Sirupsen/logrus"
+    "github.com/sirupsen/logrus"
     "github.com/mailgun/logrus-hooks/udploghook"
 )
 
