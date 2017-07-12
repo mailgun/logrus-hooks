@@ -121,14 +121,7 @@ func (h *UDPHook) SendIO(input io.Reader) error {
 
 // Levels returns the available logging levels.
 func (h *UDPHook) Levels() []logrus.Level {
-	return []logrus.Level{
-		logrus.PanicLevel,
-		logrus.FatalLevel,
-		logrus.ErrorLevel,
-		logrus.WarnLevel,
-		logrus.InfoLevel,
-		logrus.DebugLevel,
-	}
+	return logrus.AllLevels
 }
 
 func (h *UDPHook) SetDebug(set bool) {
