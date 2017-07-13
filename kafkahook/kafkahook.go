@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/errors"
 	"github.com/mailgun/holster/stack"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailru/easyjson/jwriter"
+	"github.com/sirupsen/logrus"
 )
 
 type KafkaHook struct {
@@ -139,14 +139,7 @@ func (h *KafkaHook) SendIO(input io.Reader) error {
 
 // Levels returns the available logging levels.
 func (h *KafkaHook) Levels() []logrus.Level {
-	return []logrus.Level{
-		logrus.PanicLevel,
-		logrus.FatalLevel,
-		logrus.ErrorLevel,
-		logrus.WarnLevel,
-		logrus.InfoLevel,
-		logrus.DebugLevel,
-	}
+	return logrus.AllLevels
 }
 
 func (h *KafkaHook) SetDebug(set bool) {

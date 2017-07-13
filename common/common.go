@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/mailgun/holster/stack"
+	"github.com/sirupsen/logrus"
 )
 
 func ExpandNested(key string, value interface{}, dest map[string]interface{}) {

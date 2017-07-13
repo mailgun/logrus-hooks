@@ -6,7 +6,7 @@ A Logrus Hook for sending log info to [Kafka](https://kafka.apache.org)
 # Usage
 ```go
 import (
-    "github.com/Sirupsen/logrus"
+    "github.com/sirupsen/logrus"
     "github.com/mailgun/logrus-hooks/kafkahook"
 )
 
