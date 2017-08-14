@@ -70,7 +70,7 @@ func GetLogrusCaller() *stack.FrameInfo {
 	var frames [32]uintptr
 
 	// iterate until we find non logrus function
-	length := runtime.Callers(3, frames[:])
+	length := runtime.Callers(5, frames[:])
 	for idx := 0; idx < (length - 1); idx++ {
 		pc := uintptr(frames[idx]) - 1
 		f := runtime.FuncForPC(pc)
