@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http/httptest"
-	"path"
 	"strings"
 	"testing"
 
@@ -60,8 +59,11 @@ func (s *KafkaHookTests) TestKafkaHookINFO(c *C) {
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["context"], Equals, nil)
 	c.Assert(req["logLevel"], Equals, "INFO")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestKafkaHookINFO"), Equals, true)
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/kafkahook/kafkahook_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["funcName"].(string), Equals,
+		"kafkahook_test.(*KafkaHookTests).TestKafkaHookINFO")
 }
 
 func (s *KafkaHookTests) TestKafkaHookExported(c *C) {
@@ -73,8 +75,11 @@ func (s *KafkaHookTests) TestKafkaHookExported(c *C) {
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["context"], Equals, nil)
 	c.Assert(req["logLevel"], Equals, "INFO")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestKafkaHookExported"), Equals, true)
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/kafkahook/kafkahook_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["funcName"].(string), Equals,
+		"kafkahook_test.(*KafkaHookTests).TestKafkaHookExported")
 }
 
 func (s *KafkaHookTests) TestKafkaHookContext(c *C) {
@@ -87,10 +92,13 @@ func (s *KafkaHookTests) TestKafkaHookContext(c *C) {
 
 	req := GetMsg(s.producer)
 	c.Assert(req["message"], Equals, "this is a test")
-	c.Assert(req["lineno"], Equals, float64(86))
+	c.Assert(req["lineno"], Equals, float64(91))
 	c.Assert(req["logLevel"], Equals, "ERROR")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestKafkaHookContext"), Equals, true)
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/kafkahook/kafkahook_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["funcName"].(string), Equals,
+		"kafkahook_test.(*KafkaHookTests).TestKafkaHookContext")
 
 	context := req["context"].(map[string]interface{})
 	c.Assert(context["http"].(map[string]interface{})["request"], Equals, "http://localhost")
@@ -148,9 +156,11 @@ func (s *KafkaHookTests) TestFromErr(c *C) {
 	s.log.WithFields(errors.ToLogrus(err)).Info("Info Called")
 
 	req := GetMsg(s.producer)
-	c.Assert(path.Base(req["filename"].(string)), Equals, "kafkahook_test.go")
-	c.Assert(req["lineno"], Equals, float64(146))
-	c.Assert(req["funcName"], Equals, "TestFromErr()")
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/kafkahook/kafkahook_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["lineno"], Equals, float64(154))
+	c.Assert(req["funcName"], Equals, "kafkahook_test.(*KafkaHookTests).TestFromErr")
 	c.Assert(req["excType"], Equals, "*errors.fundamental")
 	c.Assert(req["excValue"], Equals, "bar: foo")
 	c.Assert(strings.Contains(req["excText"].(string), "(*KafkaHookTests).TestFromErr"), Equals, true)

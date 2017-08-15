@@ -3,7 +3,7 @@ package levelfilter
 import "github.com/sirupsen/logrus"
 
 type LevelFilter struct {
-	hook logrus.Hook
+	hook   logrus.Hook
 	levels []logrus.Level
 }
 
@@ -16,7 +16,7 @@ func New(hook logrus.Hook, level logrus.Level) *LevelFilter {
 	}
 
 	return &LevelFilter{
-		hook: hook,
+		hook:   hook,
 		levels: levels,
 	}
 }

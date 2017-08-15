@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http/httptest"
-	"path"
 	"strings"
 	"testing"
 
@@ -54,8 +53,11 @@ func (s *UDPLogHookTests) TestUDPHookINFO(c *C) {
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["context"], Equals, nil)
 	c.Assert(req["logLevel"], Equals, "INFO")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestUDPHookINFO"), Equals, true)
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["funcName"].(string), Equals,
+		"udploghook_test.(*UDPLogHookTests).TestUDPHookINFO")
 }
 
 func (s *UDPLogHookTests) TestUDPHookExported(c *C) {
@@ -67,8 +69,11 @@ func (s *UDPLogHookTests) TestUDPHookExported(c *C) {
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["context"], Equals, nil)
 	c.Assert(req["logLevel"], Equals, "INFO")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestUDPHookExported"), Equals, true)
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["funcName"].(string), Equals,
+		"udploghook_test.(*UDPLogHookTests).TestUDPHookExported")
 }
 
 func (s *UDPLogHookTests) TestUDPHookContext(c *C) {
@@ -82,8 +87,11 @@ func (s *UDPLogHookTests) TestUDPHookContext(c *C) {
 	req := s.server.GetRequest()
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["logLevel"], Equals, "ERROR")
-	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(strings.Contains(req["funcName"].(string), "TestUDPHookContext"), Equals, true)
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["funcName"].(string), Equals,
+		"udploghook_test.(*UDPLogHookTests).TestUDPHookContext")
 
 	context := req["context"].(map[string]interface{})
 	c.Assert(context["http"].(map[string]interface{})["request"], Equals, "http://localhost")
@@ -141,13 +149,16 @@ func (s *UDPLogHookTests) TestFromErr(c *C) {
 	s.log.WithFields(errors.ToLogrus(err)).Info("Info Called")
 
 	req := s.server.GetRequest()
-	c.Assert(path.Base(req["filename"].(string)), Equals, "udploghook_test.go")
-	c.Assert(req["lineno"], Equals, float64(139))
-	c.Assert(req["funcName"], Equals, "TestFromErr()")
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["lineno"], Equals, float64(147))
+	c.Assert(req["funcName"].(string), Equals,
+		"udploghook_test.(*UDPLogHookTests).TestFromErr")
 	c.Assert(req["excType"], Equals, "*errors.fundamental")
 	c.Assert(req["excValue"], Equals, "bar: foo")
 	c.Assert(strings.Contains(req["excText"].(string), "(*UDPLogHookTests).TestFromErr"), Equals, true)
-	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go:139"), Equals, true)
+	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go:147"), Equals, true)
 }
 
 func (s *UDPLogHookTests) TestTIDAsString(c *C) {
