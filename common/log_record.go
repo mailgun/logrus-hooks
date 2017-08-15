@@ -41,7 +41,8 @@ func (r *LogRecord) FromFields(fields logrus.Fields) {
 	for k, v := range fields {
 		switch k {
 		// logrus.WithError adds a field with name error.
-		case "error": fallthrough
+		case "error":
+			fallthrough
 		case "err":
 			// Record details of the error
 			if v, ok := v.(error); ok {

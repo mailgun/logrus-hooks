@@ -73,13 +73,17 @@ func GetLogrusCaller() *stack.FrameInfo {
 	length := runtime.Callers(5, frames[:])
 	for idx := 0; idx < (length - 1); idx++ {
 		pc := uintptr(frames[idx]) - 1
-		f := runtime.FuncForPC(pc)
-		funcName := f.Name()
-		if strings.Contains(strings.ToLower(funcName), "github.com/sirupsen") {
+		fn := runtime.FuncForPC(pc)
+		funcName := fn.Name()
+		if strings.Contains(strings.ToLower(funcName), "sirupsen/logrus") {
 			continue
 		}
-		filePath, lineNo := f.FileLine(pc)
-		return &stack.FrameInfo{File: filePath, Func: funcName, LineNo: lineNo}
+		filePath, lineNo := fn.FileLine(pc)
+		return &stack.FrameInfo{
+			Func:   stack.FuncName(fn),
+			File:   filePath,
+			LineNo: lineNo,
+		}
 	}
 	return &stack.FrameInfo{}
 }

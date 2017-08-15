@@ -106,8 +106,11 @@ func (s *LevelFilterSuite) TestCallerInfoWithError(c *C) {
 
 	// Then
 	req := msgGetter()
-	c.Assert(strings.Contains(req["filename"].(string), "levelfilter_test.go"), Equals, true, Commentf(req["filename"].(string)))
-	c.Assert(strings.Contains(req["funcName"].(string), "TestCallerInfoWithError"), Equals, true, Commentf(req["funcName"].(string)))
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/levelfilter/levelfilter_test.go"),
+		Equals, true, Commentf(req["filename"].(string)))
+	c.Assert(req["funcName"], Equals,
+		"levelfilter.(*LevelFilterSuite).TestCallerInfoWithError")
 }
 
 func (s *LevelFilterSuite) TestCallerInfo(c *C) {
@@ -123,8 +126,11 @@ func (s *LevelFilterSuite) TestCallerInfo(c *C) {
 
 	// Then
 	req := msgGetter()
-	c.Assert(strings.Contains(req["filename"].(string), "levelfilter_test.go"), Equals, true, Commentf(req["filename"].(string)))
-	c.Assert(strings.Contains(req["funcName"].(string), "TestCallerInfo"), Equals, true, Commentf(req["funcName"].(string)))
+	c.Assert(strings.HasSuffix(req["filename"].(string),
+		"github.com/mailgun/logrus-hooks/levelfilter/levelfilter_test.go"), Equals,
+		true, Commentf(req["filename"].(string)))
+	c.Assert(req["funcName"].(string), Equals,
+		"levelfilter.(*LevelFilterSuite).TestCallerInfo")
 }
 
 type fakeHook struct {
