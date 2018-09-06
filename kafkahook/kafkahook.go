@@ -16,6 +16,7 @@ import (
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailru/easyjson/jwriter"
 	"github.com/sirupsen/logrus"
+	"context"
 )
 
 const bufferSize = 150
@@ -37,6 +38,22 @@ type Config struct {
 	Endpoints []string
 	Topic     string
 	Producer  sarama.AsyncProducer
+}
+
+func NewWithContext(ctx context.Context, conf Config) (hook *KafkaHook, err error) {
+	done := make(chan struct{})
+	go func() {
+		hook, err = New(conf)
+		close(done)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return hook, fmt.Errorf("connect timeout while connecting to kafka peers %s",
+			strings.Join(conf.Endpoints, ","))
+	case <-done:
+		return hook, err
+	}
 }
 
 func New(conf Config) (*KafkaHook, error) {
