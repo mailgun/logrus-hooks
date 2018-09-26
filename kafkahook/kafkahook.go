@@ -1,7 +1,9 @@
 package kafkahook
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -16,18 +18,20 @@ import (
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailru/easyjson/jwriter"
 	"github.com/sirupsen/logrus"
-	"context"
 )
 
 const bufferSize = 150
 
 type KafkaHook struct {
-	produce  chan []byte
+	produce chan []byte
+	conf    Config
+	debug   bool
+
+	// Process identity metadata
 	hostName string
 	appName  string
-	conf     Config
+	cid      string
 	pid      int
-	debug    bool
 
 	// Sync stuff
 	wg   sync.WaitGroup
@@ -98,11 +102,13 @@ func New(conf Config) (*KafkaHook, error) {
 	}()
 
 	if h.hostName, err = os.Hostname(); err != nil {
-		h.hostName = "unknown_host"
+		h.hostName = "unknown"
 	}
 	h.appName = filepath.Base(os.Args[0])
-	h.pid = os.Getpid()
-
+	if h.pid = os.Getpid(); h.pid == 1 {
+		h.pid = 0
+	}
+	h.cid = getDockerCID()
 	return &h, nil
 }
 
@@ -123,6 +129,7 @@ func (h *KafkaHook) Fire(entry *logrus.Entry) error {
 		Message:   entry.Message,
 		Context:   nil,
 		Timestamp: common.Number(float64(entry.Time.UnixNano()) / 1000000000),
+		CID:       h.cid,
 		PID:       h.pid,
 	}
 	rec.FromFields(entry.Data)
@@ -194,4 +201,25 @@ func (h *KafkaHook) Close() error {
 		err = h.conf.Producer.Close()
 	})
 	return err
+}
+
+func getDockerCID() string {
+	f, err := os.Open("/proc/self/cgroup")
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Split(line, "/docker/")
+		if len(parts) != 2 {
+			continue
+		}
+
+		fullDockerCID := parts[1]
+		return fullDockerCID[:12]
+	}
+	return ""
 }
