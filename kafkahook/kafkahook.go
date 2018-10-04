@@ -69,6 +69,7 @@ func New(conf Config) (*KafkaHook, error) {
 	kafkaConfig.Producer.Flush.Frequency = 200 * time.Millisecond
 	kafkaConfig.Producer.Retry.Backoff = 10 * time.Second
 	kafkaConfig.Producer.Retry.Max = 6
+	kafkaConfig.Producer.Return.Errors = true
 
 	// If the user failed to provide a producer create one
 	if conf.Producer == nil {
@@ -87,9 +88,47 @@ func New(conf Config) (*KafkaHook, error) {
 	go func() {
 		for {
 			select {
+			case prodErr := <-conf.Producer.Errors():
+				fmt.Fprintf(os.Stderr, "[kafkahook] producer error '%s'; reconnecting producer...\n", prodErr.Err)
+
+				// Close any previously open producers
+				if conf.Producer != nil {
+					// Since `Producer.Return.Errors` is true, `Producer.Close()` will send a shutdown error which
+					// could cause `Close()` to block unless we read it. Also there could be other errors
+					// that are waiting to be received and must be sent before shutdown is complete.
+					go func() {
+						for range conf.Producer.Errors() {}
+					}()
+
+					conf.Producer.Close()
+					conf.Producer = nil
+				}
+
+				var backOff int
+				for {
+					// Attempt to reconnect to the brokers
+					conf.Producer, err = sarama.NewAsyncProducer(conf.Endpoints, kafkaConfig)
+					if err != nil {
+						if backOff < 6 {
+							backOff++
+						}
+						fmt.Fprintf(os.Stderr, "[kafkahook] reconnect error: %s; sleeping (%d)...\n", err, backOff)
+						time.Sleep(time.Duration(backOff) * time.Second)
+						continue
+					}
+					backOff = 0
+					break
+				}
 			case buf, ok := <-h.produce:
 				if !ok {
 					h.wg.Done()
+					// See comment above
+					go func() {
+						for range conf.Producer.Errors() {}
+					}()
+					if err := conf.Producer.Close(); err != nil {
+						fmt.Fprintf(os.Stderr, "[kafkahook] producer close error: %s\n", err)
+					}
 					return
 				}
 				conf.Producer.Input() <- &sarama.ProducerMessage{
@@ -158,7 +197,7 @@ func (h *KafkaHook) sendKafka(buf []byte) error {
 	default:
 		// If the producer input channel buffer is full, then we better drop
 		// a log record than block program execution.
-		fmt.Fprintf(os.Stderr, "kafkahook buffer overflow: %s\n", string(buf))
+		fmt.Fprintf(os.Stderr, "[kafkahook] buffer overflow: %s\n", string(buf))
 	}
 	return nil
 }
@@ -198,7 +237,6 @@ func (h *KafkaHook) Close() error {
 	h.once.Do(func() {
 		close(h.produce)
 		h.wg.Wait()
-		err = h.conf.Producer.Close()
 	})
 	return err
 }
