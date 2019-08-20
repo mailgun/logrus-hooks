@@ -1,7 +1,6 @@
 package kafkahook
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -116,7 +115,7 @@ func New(conf Config) (*KafkaHook, error) {
 	if h.pid = os.Getpid(); h.pid == 1 {
 		h.pid = 0
 	}
-	h.cid = getDockerCID()
+	h.cid = common.GetDockerCID()
 	return &h, nil
 }
 
@@ -208,25 +207,4 @@ func (h *KafkaHook) Close() error {
 		h.wg.Wait()
 	})
 	return err
-}
-
-func getDockerCID() string {
-	f, err := os.Open("/proc/self/cgroup")
-	if err != nil {
-		return ""
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Split(line, "/docker/")
-		if len(parts) != 2 {
-			continue
-		}
-
-		fullDockerCID := parts[1]
-		return fullDockerCID[:12]
-	}
-	return ""
 }
