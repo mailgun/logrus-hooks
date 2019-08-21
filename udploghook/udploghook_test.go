@@ -53,8 +53,8 @@ func (s *UDPLogHookTests) TestUDPHookINFO(c *C) {
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["context"], Equals, nil)
 	c.Assert(req["logLevel"], Equals, "INFO")
-	c.Assert(strings.HasSuffix(req["filename"].(string),
-		"github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go"),
+	c.Assert(strings.Contains(req["filename"].(string),
+		"udploghook/udploghook_test.go"),
 		Equals, true, Commentf(req["filename"].(string)))
 	c.Assert(req["funcName"].(string), Equals,
 		"udploghook_test.(*UDPLogHookTests).TestUDPHookINFO")
@@ -69,8 +69,8 @@ func (s *UDPLogHookTests) TestUDPHookExported(c *C) {
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["context"], Equals, nil)
 	c.Assert(req["logLevel"], Equals, "INFO")
-	c.Assert(strings.HasSuffix(req["filename"].(string),
-		"github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go"),
+	c.Assert(strings.Contains(req["filename"].(string),
+		"udploghook/udploghook_test.go"),
 		Equals, true, Commentf(req["filename"].(string)))
 	c.Assert(req["funcName"].(string), Equals,
 		"udploghook_test.(*UDPLogHookTests).TestUDPHookExported")
@@ -87,8 +87,8 @@ func (s *UDPLogHookTests) TestUDPHookContext(c *C) {
 	req := s.server.GetRequest()
 	c.Assert(req["message"], Equals, "this is a test")
 	c.Assert(req["logLevel"], Equals, "ERROR")
-	c.Assert(strings.HasSuffix(req["filename"].(string),
-		"github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go"),
+	c.Assert(strings.Contains(req["filename"].(string),
+		"udploghook/udploghook_test.go"),
 		Equals, true, Commentf(req["filename"].(string)))
 	c.Assert(req["funcName"].(string), Equals,
 		"udploghook_test.(*UDPLogHookTests).TestUDPHookContext")
@@ -149,8 +149,8 @@ func (s *UDPLogHookTests) TestFromErr(c *C) {
 	s.log.WithFields(errors.ToLogrus(err)).Info("Info Called")
 
 	req := s.server.GetRequest()
-	c.Assert(strings.HasSuffix(req["filename"].(string),
-		"github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go"),
+	c.Assert(strings.Contains(req["filename"].(string),
+		"udploghook/udploghook_test.go"),
 		Equals, true, Commentf(req["filename"].(string)))
 	c.Assert(req["lineno"], Equals, float64(147))
 	c.Assert(req["funcName"].(string), Equals,
@@ -158,7 +158,7 @@ func (s *UDPLogHookTests) TestFromErr(c *C) {
 	c.Assert(req["excType"], Equals, "*errors.fundamental")
 	c.Assert(req["excValue"], Equals, "bar: foo")
 	c.Assert(strings.Contains(req["excText"].(string), "(*UDPLogHookTests).TestFromErr"), Equals, true)
-	c.Assert(strings.Contains(req["excText"].(string), "github.com/mailgun/logrus-hooks/udploghook/udploghook_test.go:147"), Equals, true)
+	c.Assert(strings.Contains(req["excText"].(string), "udploghook/udploghook_test.go:147"), Equals, true)
 }
 
 func (s *UDPLogHookTests) TestTIDAsString(c *C) {
