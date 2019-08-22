@@ -48,7 +48,7 @@ func main() {
 
 	parts := strings.Split(opts.String("address"), ":")
 	if len(parts) != 2 {
-		fmt.Fprint(os.Stderr, "address '%s' invalid must be in format 'host:port'", opts.String("address"))
+		fmt.Fprintf(os.Stderr, "address '%s' invalid must be in format 'host:port'", opts.String("address"))
 		os.Exit(1)
 	}
 

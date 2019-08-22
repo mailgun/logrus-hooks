@@ -1,22 +1,19 @@
 package kafkahook
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/mailgun/holster"
+	"github.com/mailgun/logrus-hooks/common"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/mailgun/holster/errors"
-	"github.com/mailgun/holster/stack"
-	"github.com/mailgun/logrus-hooks/common"
-	"github.com/mailru/easyjson/jwriter"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,12 +24,6 @@ type KafkaHook struct {
 	conf    Config
 	debug   bool
 
-	// Process identity metadata
-	hostName string
-	appName  string
-	cid      string
-	pid      int
-
 	// Sync stuff
 	wg   sync.WaitGroup
 	once sync.Once
@@ -42,6 +33,7 @@ type Config struct {
 	Endpoints []string
 	Topic     string
 	Producer  sarama.AsyncProducer
+	Formatter logrus.Formatter
 }
 
 func NewWithContext(ctx context.Context, conf Config) (hook *KafkaHook, err error) {
@@ -61,6 +53,8 @@ func NewWithContext(ctx context.Context, conf Config) (hook *KafkaHook, err erro
 }
 
 func New(conf Config) (*KafkaHook, error) {
+	// If no formatter defined, use the default
+	holster.SetDefault(&conf.Formatter, common.DefaultFormatter)
 	var err error
 
 	kafkaConfig := sarama.NewConfig()
@@ -108,46 +102,14 @@ func New(conf Config) (*KafkaHook, error) {
 			}
 		}
 	}()
-
-	if h.hostName, err = os.Hostname(); err != nil {
-		h.hostName = "unknown"
-	}
-	h.appName = filepath.Base(os.Args[0])
-	if h.pid = os.Getpid(); h.pid == 1 {
-		h.pid = 0
-	}
-	h.cid = getDockerCID()
 	return &h, nil
 }
 
 func (h *KafkaHook) Fire(entry *logrus.Entry) error {
-	var caller *stack.FrameInfo
-	var err error
-
-	caller = common.GetLogrusCaller()
-
-	rec := &common.LogRecord{
-		Category:  "logrus",
-		AppName:   h.appName,
-		HostName:  h.hostName,
-		LogLevel:  strings.ToUpper(entry.Level.String()),
-		FileName:  caller.File,
-		FuncName:  caller.Func,
-		LineNo:    caller.LineNo,
-		Message:   entry.Message,
-		Context:   nil,
-		Timestamp: common.Number(float64(entry.Time.UnixNano()) / 1000000000),
-		CID:       h.cid,
-		PID:       h.pid,
+	buf, err := h.conf.Formatter.Format(entry)
+	if err != nil {
+		return errors.Wrap(err, "while formatting entry")
 	}
-	rec.FromFields(entry.Data)
-
-	var w jwriter.Writer
-	rec.MarshalEasyJSON(&w)
-	if w.Error != nil {
-		return errors.Wrap(w.Error, "while marshalling json")
-	}
-	buf := w.Buffer.BuildBytes()
 
 	if h.debug {
 		fmt.Printf("%s\n", string(buf))
@@ -208,25 +170,4 @@ func (h *KafkaHook) Close() error {
 		h.wg.Wait()
 	})
 	return err
-}
-
-func getDockerCID() string {
-	f, err := os.Open("/proc/self/cgroup")
-	if err != nil {
-		return ""
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Split(line, "/docker/")
-		if len(parts) != 2 {
-			continue
-		}
-
-		fullDockerCID := parts[1]
-		return fullDockerCID[:12]
-	}
-	return ""
 }

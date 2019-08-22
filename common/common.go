@@ -1,9 +1,11 @@
 package common
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"runtime"
 	"strings"
 
@@ -101,4 +103,25 @@ func ToFields(items map[string]string) logrus.Fields {
 		result[key] = value
 	}
 	return result
+}
+
+func GetDockerCID() string {
+	f, err := os.Open("/proc/self/cgroup")
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Split(line, "/docker/")
+		if len(parts) != 2 {
+			continue
+		}
+
+		fullDockerCID := parts[1]
+		return fullDockerCID[:12]
+	}
+	return ""
 }
