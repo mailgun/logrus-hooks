@@ -1,13 +1,14 @@
 package common
 
 import (
-	"github.com/mailgun/holster/stack"
-	"github.com/mailru/easyjson/jwriter"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mailgun/holster/v3/callstack"
+	"github.com/mailru/easyjson/jwriter"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 var DefaultFormatter = NewJSONFormater()
@@ -27,9 +28,8 @@ func NewJSONFormater() *JSONFormater {
 	return &f
 }
 
-
 func (f *JSONFormater) Format(entry *logrus.Entry) ([]byte, error) {
-	var caller *stack.FrameInfo
+	var caller *callstack.FrameInfo
 
 	caller = GetLogrusCaller()
 
@@ -60,8 +60,8 @@ func (f *JSONFormater) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 type JSONFormater struct {
-	appName string
+	appName  string
 	hostName string
-	cid string
-	pid int
+	cid      string
+	pid      int
 }

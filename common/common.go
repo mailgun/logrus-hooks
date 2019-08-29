@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/mailgun/holster/stack"
+	"github.com/mailgun/holster/v3/callstack"
 	"github.com/sirupsen/logrus"
 )
 
@@ -68,7 +68,7 @@ func RequestToMap(req *http.Request) map[string]interface{} {
 }
 
 // Returns the file, function and line number of the function that called logrus
-func GetLogrusCaller() *stack.FrameInfo {
+func GetLogrusCaller() *callstack.FrameInfo {
 	var frames [32]uintptr
 
 	// iterate until we find non logrus function
@@ -81,13 +81,13 @@ func GetLogrusCaller() *stack.FrameInfo {
 			continue
 		}
 		filePath, lineNo := fn.FileLine(pc)
-		return &stack.FrameInfo{
-			Func:   stack.FuncName(fn),
+		return &callstack.FrameInfo{
+			Func:   callstack.FuncName(fn),
 			File:   filePath,
 			LineNo: lineNo,
 		}
 	}
-	return &stack.FrameInfo{}
+	return &callstack.FrameInfo{}
 }
 
 // Returns true if the key exists in the map

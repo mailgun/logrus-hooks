@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mailgun/holster/errors"
+	"github.com/mailgun/holster/v3/errors"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailgun/logrus-hooks/udploghook"
 	"github.com/sirupsen/logrus"
