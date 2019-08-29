@@ -3,18 +3,19 @@ package udploghook
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"net"
+
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailru/easyjson/jwriter"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"io"
-	"net"
 )
 
 type UDPHook struct {
 	formatter logrus.Formatter
-	conn     net.Conn
-	debug    bool
+	conn      net.Conn
+	debug     bool
 }
 
 func New(host string, port int) (*UDPHook, error) {

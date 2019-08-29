@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"testing"
+
 	hooks "github.com/mailgun/logrus-hooks"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailru/easyjson"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
-
 
 func TestNewJSONFormater(t *testing.T) {
 	var log = logrus.New()

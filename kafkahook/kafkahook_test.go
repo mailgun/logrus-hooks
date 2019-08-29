@@ -11,7 +11,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/Shopify/sarama/mocks"
-	"github.com/mailgun/holster/errors"
+	"github.com/mailgun/holster/v3/errors"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailgun/logrus-hooks/kafkahook"
 	"github.com/sirupsen/logrus"
@@ -116,7 +116,7 @@ func (s *KafkaHookTests) TestKafkaHookRequest(c *C) {
 	body := bytes.NewBuffer([]byte("body"))
 	req := httptest.NewRequest("POST", "http://example.com?param1=1&param2=2", body)
 	req.Header.Add("User-Agent", "test-agent")
-	req.ParseForm()
+	_ = req.ParseForm()
 
 	s.log.WithFields(logrus.Fields{
 		"http": req,

@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/mailgun/holster"
-	"github.com/mailgun/logrus-hooks/common"
 	"io"
 	"os"
 	"strings"
@@ -13,7 +11,9 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/mailgun/holster/errors"
+	"github.com/mailgun/holster/v3/errors"
+	"github.com/mailgun/holster/v3/setter"
+	"github.com/mailgun/logrus-hooks/common"
 	"github.com/sirupsen/logrus"
 )
 
@@ -54,7 +54,7 @@ func NewWithContext(ctx context.Context, conf Config) (hook *KafkaHook, err erro
 
 func New(conf Config) (*KafkaHook, error) {
 	// If no formatter defined, use the default
-	holster.SetDefault(&conf.Formatter, common.DefaultFormatter)
+	setter.SetDefault(&conf.Formatter, common.DefaultFormatter)
 	var err error
 
 	kafkaConfig := sarama.NewConfig()
@@ -84,12 +84,12 @@ func New(conf Config) (*KafkaHook, error) {
 			select {
 			case err := <-conf.Producer.Errors():
 				msg, _ := err.Msg.Value.Encode()
-				fmt.Fprintf(os.Stderr, "[kafkahook] produce error '%s' for: %s\n", err.Err, string(msg))
+				_, _ = fmt.Fprintf(os.Stderr, "[kafkahook] produce error '%s' for: %s\n", err.Err, string(msg))
 
 			case buf, ok := <-h.produce:
 				if !ok {
 					if err := conf.Producer.Close(); err != nil {
-						fmt.Fprintf(os.Stderr, "[kafkahook] producer close error: %s\n", err)
+						_, _ = fmt.Fprintf(os.Stderr, "[kafkahook] producer close error: %s\n", err)
 					}
 					h.wg.Done()
 					return
@@ -128,7 +128,7 @@ func (h *KafkaHook) sendKafka(buf []byte) error {
 	default:
 		// If the producer input channel buffer is full, then we better drop
 		// a log record than block program execution.
-		fmt.Fprintf(os.Stderr, "[kafkahook] buffer overflow: %s\n", string(buf))
+		_, _ = fmt.Fprintf(os.Stderr, "[kafkahook] buffer overflow: %s\n", string(buf))
 	}
 	return nil
 }

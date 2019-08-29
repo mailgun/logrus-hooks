@@ -3,8 +3,8 @@ package common
 import (
 	"fmt"
 
-	"github.com/mailgun/holster/errors"
-	"github.com/mailgun/holster/stack"
+	"github.com/mailgun/holster/v3/callstack"
+	"github.com/mailgun/holster/v3/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -52,9 +52,9 @@ func (r *LogRecord) FromFields(fields logrus.Fields) {
 				r.ExcText = fmt.Sprintf("%+v", v)
 
 				// Extract the stack info if provided
-				if v, ok := v.(stack.HasStackTrace); ok {
+				if v, ok := v.(callstack.HasStackTrace); ok {
 					trace := v.StackTrace()
-					caller := stack.GetLastFrame(trace)
+					caller := callstack.GetLastFrame(trace)
 					r.FuncName = caller.Func
 					r.LineNo = caller.LineNo
 					r.FileName = caller.File
