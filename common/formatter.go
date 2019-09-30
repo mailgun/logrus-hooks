@@ -54,6 +54,10 @@ func (f *JSONFormater) Format(entry *logrus.Entry) ([]byte, error) {
 	if w.Error != nil {
 		return nil, errors.Wrap(w.Error, "while marshalling json")
 	}
+
+	// Append a newline to the formatted record
+	w.Buffer.AppendByte(byte(0x0a))
+
 	buf := w.Buffer.BuildBytes()
 
 	return buf, nil
