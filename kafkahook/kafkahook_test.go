@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Shopify/sarama"
-	"github.com/Shopify/sarama/mocks"
+	"github.com/IBM/sarama"
+	"github.com/IBM/sarama/mocks"
 	"github.com/mailgun/holster/v3/errors"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailgun/logrus-hooks/kafkahook"

@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/Shopify/sarama"
-	"github.com/Shopify/sarama/mocks"
+	"github.com/IBM/sarama"
+	"github.com/IBM/sarama/mocks"
 	"github.com/mailgun/logrus-hooks/kafkahook"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/mailgun/logrus-hooks/common"
 	"github.com/mailgun/logrus-hooks/kafkahook"
 	"github.com/sirupsen/logrus"
@@ -20,7 +20,8 @@ func checkErr(msg string, err error) {
 }
 
 func main() {
-	desc := args.Dedent(`CLI for kafkahook
+	desc := args.Dedent(
+		`CLI for kafkahook
 
 	Examples:
 	   export KAFKAHOOK_ENDPOINTS=kafka1:9092,kafka2:9092
@@ -32,7 +33,8 @@ func main() {
 	   $ kafka-hook "This is a message line" -o "http.request=http://foo/bar" -o "foo=bar"
 
 	   Send custom JSON to kafkahook
-	   $ echo -e '{"custom":"json"}' | kafkahook -v`)
+	   $ echo -e '{"custom":"json"}' | kafkahook -v`,
+	)
 
 	parser := args.NewParser(args.EnvPrefix("KAFKAHOOK_"), args.Desc(desc, args.IsFormated))
 	parser.AddOption("--verbose").Alias("-v").IsTrue().Help("be verbose")
@@ -47,10 +49,12 @@ func main() {
 	// Parser and set global options
 	opts := parser.ParseSimple(nil)
 
-	hook, err := kafkahook.New(kafkahook.Config{
-		Endpoints: opts.StringSlice("endpoints"),
-		Topic:     opts.String("topic"),
-	})
+	hook, err := kafkahook.New(
+		kafkahook.Config{
+			Endpoints: opts.StringSlice("endpoints"),
+			Topic:     opts.String("topic"),
+		},
+	)
 	checkErr("KafkaHook Error", err)
 
 	if opts.Bool("verbose") {
@@ -71,7 +75,7 @@ func main() {
 		}
 	}
 
-	logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
 	logrus.AddHook(hook)
 
 	if opts.IsSet("other") {

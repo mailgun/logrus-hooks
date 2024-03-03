@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/mailgun/holster/v3/errors"
 	"github.com/mailgun/holster/v3/setter"
 	"github.com/mailgun/logrus-hooks/common"
@@ -45,8 +45,10 @@ func NewWithContext(ctx context.Context, conf Config) (hook *KafkaHook, err erro
 
 	select {
 	case <-ctx.Done():
-		return hook, fmt.Errorf("connect timeout while connecting to kafka peers %s",
-			strings.Join(conf.Endpoints, ","))
+		return hook, fmt.Errorf(
+			"connect timeout while connecting to kafka peers %s",
+			strings.Join(conf.Endpoints, ","),
+		)
 	case <-done:
 		return hook, err
 	}
@@ -165,9 +167,11 @@ func (h *KafkaHook) SetDebug(set bool) {
 // Close the kakfa producer and flush any remaining logs
 func (h *KafkaHook) Close() error {
 	var err error
-	h.once.Do(func() {
-		close(h.produce)
-		h.wg.Wait()
-	})
+	h.once.Do(
+		func() {
+			close(h.produce)
+			h.wg.Wait()
+		},
+	)
 	return err
 }
