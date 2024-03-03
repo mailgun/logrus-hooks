@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -21,7 +21,8 @@ func checkErr(msg string, err error) {
 }
 
 func main() {
-	desc := args.Dedent(`CLI for udplog
+	desc := args.Dedent(
+		`CLI for udplog
 
 	Examples:
 	   export UDPLOG_ADDRESS=localhost:55647
@@ -33,7 +34,8 @@ func main() {
 	   $ udplog "This is a message line" -o "http.request=http://foo/bar" -o "foo=bar"
 
 	   Send custom JSON to udplog
-	   $ echo -e '{"custom":"json"}' | udplog -v`)
+	   $ echo -e '{"custom":"json"}' | udplog -v`,
+	)
 
 	parser := args.NewParser(args.EnvPrefix("UDPLOG_"), args.Desc(desc, args.IsFormated))
 	parser.AddOption("--verbose").Alias("-v").IsTrue().Help("be verbose")
@@ -76,7 +78,7 @@ func main() {
 		}
 	}
 
-	logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
 	logrus.AddHook(hook)
 
 	if opts.IsSet("other") {
